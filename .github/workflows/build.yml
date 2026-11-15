@@ -32,9 +32,12 @@ jobs:
           find extracted -name settings.gradle.kts
 
      
+      - 
+      
       - name: Build APK
         run: |
           PROJECT_DIR=$(dirname "$(find extracted -name settings.gradle.kts -print -quit)")
+
           if [ -z "$PROJECT_DIR" ]; then
             echo "Android project not found"
             exit 1
@@ -42,6 +45,21 @@ jobs:
 
           sed -i 's/android:hintTextColor/android:textColorHint/g' "$PROJECT_DIR/app/src/main/res/layout/activity_main.xml"
 
+          cat >> "$PROJECT_DIR/app/build.gradle.kts" <<'EOF'
+
+          android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+          }
+
+          tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+          }
+          EOF
+
           gradle -p "$PROJECT_DIR" assembleDebug
 
-      
